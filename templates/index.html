@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS TRADING PORTAL</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #07090e;
+            --card-bg: #111622;
+            --border-color: #1f293d;
+            --accent-blue: #3b82f6;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --hover-bg: #182033;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* App Layout with Sidebar */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 260px;
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 20px;
+        }
+
+        .sidebar-brand {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            color: var(--text-main);
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        .nav-link-custom {
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            text-align: left;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .nav-link-custom:hover {
+            color: var(--text-main);
+            background-color: var(--hover-bg);
+        }
+
+        .nav-link-custom.active {
+            color: #ffffff;
+            background-color: var(--accent-blue);
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+        }
+
+        /* Main Content Viewport */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .metric-title {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 6px;
+        }
+
+        /* Section Visibility Handler */
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active-view {
+            display: block;
+        }
+
+        /* Clock Header */
+        .world-clock {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: right;
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        /* Form Controls */
+        .form-control, .form-select {
+            background-color: #07090e !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main) !important;
+            border-radius: 8px;
+            padding: 10px 14px;
+        }
+        .form-control:focus {
+            border-color: var(--accent-blue) !important;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25) !important;
+        }
+
+        /* Custom Calendar Grid Styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .cal-header-cell {
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            padding: 8px;
+        }
+        .cal-day-cell {
+            background-color: #07090e;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            min-height: 85px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .cal-day-cell:hover {
+            border-color: var(--accent-blue);
+            background-color: var(--hover-bg);
+        }
+        .cal-day-cell.active-selected {
+            border-color: var(--accent-blue);
+            background-color: rgba(59, 130, 246, 0.15);
+        }
+        .cal-day-cell.other-month {
+            opacity: 0.35;
+        }
+        .event-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            font-weight: 600;
+            width: fit-content;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div>
+                <div class="sidebar-brand">NEXUS TRADING PORTAL</div>
+                <div class="nav-menu">
+                    <button class="nav-link-custom active" onclick="switchView('dashboard', this)">Dashboard & Analytics</button>
+                    <button class="nav-link-custom" onclick="switchView('trade-journal', this)">Trade Journal</button>
+                    <button class="nav-link-custom" onclick="switchView('advanced-limits', this)">Advanced Limits</button>
+                    <button class="nav-link-custom" onclick="switchView('macro-terminal', this)">Economic Calendar</button>
+                    <button class="nav-link-custom" onclick="switchView('live-feed', this)">Live Feed & Charts</button>
+                </div>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">
+                System Status: <span style="color: #10b981; font-weight: 600;">● Connected</span>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            
+            <!-- World Clock Bar -->
+            <div class="world-clock" id="worldClock">
+                NEW YORK: --:-- | LONDON: --:-- | TOKYO: --:--
+            </div>
+
+            <!-- VIEW 1: DASHBOARD & METRICS -->
+            <div id="dashboard" class="view-section active-view">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="glass-card">
+                            <div class="metric-title">Net Profit/Loss</div>
+                            <div class="metric-value" id="netPlDisplay">$0.00</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="glass-card">
+                            <div class="metric-title">Win Rate</div>
+                            <div class="metric-value" id="winRateDisplay">0.0% <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-muted);">(0 trades)</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="glass-card">
+                            <div class="metric-title">Total Injections</div>
+                            <div class="metric-value" id="totalInjectionsDisplay">0</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="glass-card">
+                            <div class="metric-title">Current Equity</div>
+                            <div class="metric-value" id="currentEquityDisplay">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="glass-card">
+                            <div class="metric-title mb-3">Cumulative Equity Growth</div>
+                            <div style="position: relative; height: 320px; width: 100%;">
+                                <canvas id="equityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="glass-card">
+                            <div class="metric-title mb-3">Bot Controls & Risk Settings</div>
+                            <form id="botSettingsForm">
+                                <div class="mb-3 form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="masterSwitch" checked>
+                                    <label class="form-check-label" for="masterSwitch" style="color: var(--text-main); font-size: 0.9rem;">Master Execution Switch</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted" style="font-size: 0.75rem;">Risk Per Trade (%)</label>
+                                    <input type="number" step="0.1" class="form-control" id="riskPerTrade" value="2.0">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted" style="font-size: 0.75rem;">Risk-To-Reward Target (1 : X)</label>
+                                    <input type="number" step="0.1" class="form-control" id="riskReward" value="2.0">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted" style="font-size: 0.75rem;">Max Daily Trades</label>
+                                    <input type="number" class="form-control" id="maxTrades" value="2">
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 mt-2" style="background-color: var(--accent-blue); border: none; font-weight: 600;">Apply & Save Parameters</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: TRADE JOURNAL -->
+            <div id="trade-journal" class="view-section">
+                <div class="glass-card">
+                    <h3 class="mb-3" style="font-size: 1.1rem; font-weight: 600;">Trade Journal & History</h3>
+                    <p class="text-muted" style="font-size: 0.9rem;">Detailed log of past executions pulled from your Google Sheet records.</p>
+                    <div class="table-responsive mt-4">
+                        <table class="table table-dark table-hover align-middle" style="background: transparent;">
+                            <thead>
+                                <tr style="color: var(--text-muted); font-size: 0.8rem; border-bottom: 1px solid var(--border-color);">
+                                    <th>Ticket</th>
+                                    <th>Asset</th>
+                                    <th>Type</th>
+                                    <th>Lots</th>
+                                    <th>Open Price</th>
+                                    <th>Close Price</th>
+                                    <th>Profit/Loss ($)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="journalTableBody">
+                                <tr><td colspan="7" class="text-center text-muted py-4">No trade records loaded. Connected to Google Sheets API.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 3: ADVANCED LIMITS -->
+            <div id="advanced-limits" class="view-section">
+                <div class="glass-card">
+                    <h3 class="mb-3" style="font-size: 1.1rem; font-weight: 600;">Advanced Risk & Execution Limits</h3>
+                    <p class="text-muted" style="font-size: 0.9rem;">Configure circuit breakers, drawdown maximums, and automated session cutoffs.</p>
+                    <hr style="border-color: var(--border-color);">
+                    <div class="row mt-4">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted" style="font-size: 0.8rem;">Max Daily Drawdown Limit (%)</label>
+                            <input type="number" class="form-control" value="5.0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted" style="font-size: 0.8rem;">Emergency Stop Threshold ($)</label>
+                            <input type="number" class="form-control" value="500.0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 4: MACRO TERMINAL (CUSTOM INTELLIGENT ECONOMIC CALENDAR) -->
+            <div id="macro-terminal" class="view-section">
+                <div class="glass-card mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 style="font-size: 1.1rem; font-weight: 600; margin: 0;">Economic Calendar & Market Insights</h3>
+                        <div style="font-size: 0.9rem; font-weight: 600; color: var(--accent-blue);" id="currentMonthDisplay">September 2026</div>
+                    </div>
+                    <p class="text-muted" style="font-size: 0.85rem;">Click on any calendar day to inspect scheduled high-impact releases, core definitions, and mentor trading expectations.</p>
+                    
+                    <!-- Calendar Header Days -->
+                    <div class="calendar-grid">
+                        <div class="cal-header-cell">Mon</div>
+                        <div class="cal-header-cell">Tue</div>
+                        <div class="cal-header-cell">Wed</div>
+                        <div class="cal-header-cell">Thu</div>
+                        <div class="cal-header-cell">Fri</div>
+                        <div class="cal-header-cell">Sat</div>
+                        <div class="cal-header-cell">Sun</div>
+                    </div>
+                    <!-- Calendar Days Grid Container -->
+                    <div class="calendar-grid" id="calendarDaysGrid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <!-- Event Details & Insight Panel -->
+                <div class="glass-card" id="eventInsightPanel" style="border-left: 4px solid var(--accent-blue);">
+                    <div class="metric-title mb-2">Selected Date Event Breakdown</div>
+                    <h4 id="eventTitle" style="font-size: 1.1rem; font-weight: 600; color: var(--text-main);">Select a day on the calendar above</h4>
+                    <p id="eventDescription" class="text-muted mt-2" style="font-size: 0.9rem; line-height: 1.5;">
+                        Click a date with a highlighted event badge to view detailed insider explanations (such as CPI, NFP, interest rate triggers, volatility expectations, and directional trading bias).
+                    </p>
+                </div>
+            </div>
+
+            <!-- VIEW 5: LIVE FEED & CHARTS -->
+            <div id="live-feed" class="view-section">
+                <div class="glass-card">
+                    <h3 class="mb-3" style="font-size: 1.1rem; font-weight: 600;">Live Market Feed & Advanced Charting</h3>
+                    <div style="height: 700px; width: 100%;">
+                        <div class="tradingview-widget-container" style="height:100%;width:100%">
+                            <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                            {
+                            "autosize": true,
+                            "symbol": "DERIV:R_10",
+                            "interval": "5",
+                            "timezone": "Etc/UTC",
+                            "theme": "dark",
+                            "style": "1",
+                            "locale": "en",
+                            "enable_publishing": false,
+                            "hide_side_toolbar": false,
+                            "allow_symbol_change": true,
+                            "details": true,
+                            "hotlist": true,
+                            "calendar": false,
+                            "support_host": "https://www.tradingview.com"
+                            }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript for View Switching, Clocks & Interactive Calendar -->
+    <script>
+        function switchView(viewId, buttonElement) {
+            document.querySelectorAll('.view-section').forEach(section => {
+                section.classList.remove('active-view');
+            });
+            document.querySelectorAll('.nav-link-custom').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(viewId).classList.add('active-view');
+            buttonElement.classList.add('active');
+        }
+
+        // World Clocks Updater
+        function updateClocks() {
+            const now = new Date();
+            const options = { hour: '2-digit', minute: '2-digit', hour12: false };
+            
+            const nyTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"})).toLocaleTimeString([], options);
+            const londonTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/London"})).toLocaleTimeString([], options);
+            const tokyoTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Tokyo"})).toLocaleTimeString([], options);
+
+            document.getElementById('worldClock').innerText = `NEW YORK: ${nyTime} | LONDON: ${londonTime} | TOKYO: ${tokyoTime}`;
+        }
+        setInterval(updateClocks, 1000);
+        updateClocks();
+
+        // Sample Economic Event Data Database (Simulated Mentor Calendar)
+        const economicEvents = {
+            "2026-09-02": {
+                title: "USD - ISM Manufacturing PMI (Sep 2)",
+                desc: "<strong>What it is:</strong> Measures the health of the manufacturing sector. Above 50 indicates expansion; below 50 signals contraction.<br><br><strong>Trading Expectation:</strong> A higher-than-expected print strengthens the US Dollar, often triggering rapid sell-offs in major currency pairs and indices. Look for liquidity sweeps at key daily levels before taking continuation entries."
+            },
+            "2026-09-10": {
+                title: "EUR - ECB Interest Rate Decision & Monetary Policy Statement",
+                desc: "<strong>What it is:</strong> The European Central Bank announces its benchmark refinancing rate.<br><br><strong>Trading Expectation:</strong> High volatility on EUR pairs. If rates hold steady but tone is hawkish, expect an immediate spike up followed by a sharp mitigation back into the 200 EMA."
+            },
+            "2026-09-15": {
+                title: "USD - Consumer Price Index (CPI) m/m",
+                desc: "<strong>What it is:</strong> The premier inflation gauge measuring price changes in consumer goods and services.<br><br><strong>Trading Expectation:</strong> Extreme volatility. Hotter inflation than forecast causes USD spikes and stock drops. Mentors advise staying flat 15 minutes before and after the release, letting the initial fakeout happen, then trading the true institutional direction on the 5-minute chart."
+            },
+            "2026-09-23": {
+                title: "GBP - Retail Sales m/m",
+                desc: "<strong>What it is:</strong> Measures total receipts of retail stores in the UK, serving as an indicator of consumer confidence.<br><br><strong>Trading Expectation:</strong> Moderate-to-high volatility on GBP/USD. Watch out for false breakouts during the London open session."
+            },
+            "2026-09-28": {
+                title: "USD - Fed Chair Powell Speaks",
+                desc: "<strong>What it is:</strong> Federal Reserve Chairman speech offering clues on future interest rate paths.<br><br><strong>Trading Expectation:</strong> Markets trend aggressively during his speech. Avoid fading the initial impulse candle."
+            }
+        };
+
+        // Build Interactive Calendar for September 2026
+        function buildCalendar() {
+            const grid = document.getElementById('calendarDaysGrid');
+            grid.innerHTML = '';
+
+            // September 2026 starts on a Tuesday (Index 1 assuming Mon start)
+            // Let's generate 35 cells covering the month grid
+            for (let i = 1; i <= 30; i++) {
+                const dayStr = i < 10 ? `0${i}` : `${i}`;
+                const fullDateKey = `2026-09-${dayStr}`;
+                const hasEvent = economicEvents[fullDateKey];
+
+                const cell = document.createElement('div');
+                cell.className = 'cal-day-cell';
+                if (i === 20) cell.classList.add('active-selected'); // default highlight today
+
+                cell.innerHTML = `
+                    <div style="font-size: 0.8rem; font-weight: 600; color: ${i === 20 ? 'var(--accent-blue)' : 'var(--text-main)'};">${i}</div>
+                    ${hasEvent ? `<div class="event-badge">High Impact</div>` : ''}
+                `;
+
+                cell.onclick = () => {
+                    document.querySelectorAll('.cal-day-cell').forEach(c => c.classList.remove('active-selected'));
+                    cell.classList.add('active-selected');
+                    
+                    if (hasEvent) {
+                        document.getElementById('eventTitle').innerText = hasEvent.title;
+                        document.getElementById('eventDescription').innerHTML = hasEvent.desc;
+                    } else {
+                        document.getElementById('eventTitle').innerText = `September ${i}, 2026 - No High-Impact Events Scheduled`;
+                        document.getElementById('eventDescription').innerHTML = "No major macroeconomic releases scheduled for this date. Standard technical setup conditions apply according to your trading plan.";
+                    }
+                };
+
+                grid.appendChild(cell);
+            }
+
+            // Load default for Sep 20 if available
+            if(economicEvents["2026-09-20"]) {
+                document.getElementById('eventTitle').innerText = economicEvents["2026-09-20"].title;
+                document.getElementById('eventDescription').innerHTML = economicEvents["2026-09-20"].desc;
+            }
+        }
+        buildCalendar();
+
+        // Equity Chart Initialization
+        const ctx = document.getElementById('equityChart').getContext('2d');
+        const equityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Start'],
+                datasets: [{
+                    label: 'Cumulative P&L ($)',
+                    data: [0],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { grid: { color: '#1f293d' }, ticks: { color: '#9ca3af' } },
+                    y: { grid: { color: '#1f293d' }, ticks: { color: '#9ca3af' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "portal_risk_pct": 0.1,
+  "portal_reward_pct": 0.2,
+  "monthly_drawdown_limit": 0.5,
+  "account_type": "DEMO",
+  "ig_username": "mcneill_bot_demo",
+  "ig_password": "Mcneill@2511",
+  "ig_api_key": "dd9de2c6dccb0cb6e6fdddfe365fc09bfbf4db35",
+  "ig_acc_type": "DEMO",
+  "max_daily_trades": 4,
+  "bot_enabled": true
+}
