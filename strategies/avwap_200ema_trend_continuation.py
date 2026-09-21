@@ -58,3 +58,4 @@ class AVWAPTrendContinuation:
             'exit_mode': self.exit_mode,
             'breakeven_at': 0.80 # Shared risk manager rule
         }
+    

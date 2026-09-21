@@ -11,7 +11,7 @@ export const INITIAL_BROKER_CONFIG: BrokerConfig = {
   accountNumber: '8849102',
   server: 'Deriv-Server-02',
   apiToken: 'drv_live_992140a8f12c',
-  webhookUrl: 'http://localhost:5001/api/mt5/execution',
+  webhookUrl: 'mc-production-6244.up.railway.app',
   connected: true,
   lastPingMs: 14,
   lastSyncTime: 'Just now',

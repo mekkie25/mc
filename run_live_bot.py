@@ -4,7 +4,7 @@ from execution import DerivLiveFeed, GoogleAIAnalyst
 from strategies.grubber_kick import GrubberKick
 
 # Endpoint hosted by your running tsx server
-PORTAL_TELEMETRY_URL = "http://localhost:3000/api/broker/telemetry"
+PORTAL_TELEMETRY_URL = "website-production-9e03.up.railway.app"
 
 def push_telemetry(balance, equity, profit, win_rate, active_trades):
     """Posts live broker metrics directly to your web portal interface."""
